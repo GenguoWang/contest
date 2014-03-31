@@ -47,14 +47,54 @@ typedef long long ll;
 typedef unsigned int UI;
 typedef long double LD;
 typedef unsigned long long ULL;
+double dist(double x1,double y1,double x2,double y2)
+{
+    return sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+}
 int main()
 {
     int T;
+    int N;
+    double x[50000];
+    double y[50000];
+    double left,right,middle;
+    double maxLeft,maxRight,temp;
     cin >> T;
     REP(caseNumber,1,T+1)
     {
-        //cout.precision(6);
-        cout << "Case #" <<caseNumber<<": " << "\n";
+        cin >> N;
+        REP(i,0,N) cin >> x[i] >> y[i];
+        left = -10000.0;
+        right = 10000.0;
+        while(right-left>1e-8)
+        {
+            middle = (right+left)/2;
+            maxRight = 0;
+            maxLeft = 0;
+            REP(i,0,N)
+            {
+                temp = dist(x[i],y[i],middle,0);
+                if(x[i]<middle && temp>maxLeft)
+                {
+                    maxLeft = temp;
+                }
+                else if(x[i]>=middle && temp>maxRight)
+                {
+                    maxRight = temp;
+                }
+            }
+            if(maxRight>maxLeft)
+            {
+                left = middle;
+            }
+            else
+            {
+                right = middle;
+            }
+        }
+
+        cout.precision(6);
+        cout << "Case #" <<caseNumber<<": "<<fixed <<middle << "\n";
     }
     return 0;
 }

@@ -7,23 +7,20 @@
 using namespace std;
 
 struct Node {
+    //if have left right
+    //mNumber = left->rNumber, right->lNumber = mNumber+1
     int lNumber,mNumber,rNumber;
     int trueLeft,trueRight;
-    bool hasLeft,hasRight;
     Node *left,*right;
     Node(int l,int r):lNumber(l),rNumber(r),left(NULL),right(NULL)
     {
         trueLeft = -1;
         trueRight = -1;
-        hasLeft = false;
-        hasRight = false;
     }
     Node(int l,int r,int trueLeft, int trueRight):lNumber(l),rNumber(r),left(NULL),right(NULL)
     {
         this->trueLeft = trueLeft;
         this->trueRight = trueRight;
-        hasLeft = false;
-        hasRight = false;
     }
 };
 class SegTree
@@ -33,40 +30,23 @@ class SegTree
         SegTree(int l,int r)
         {
             root = new Node(l,r);
-            root->trueLeft = l;
-            root->trueRight = r;
-            root->hasLeft = true;
-            root->hasRight = true;
         }
         void find(int num,int&l,int&r)
         {
             Node*node = root;
             while(node->left != NULL)
             {
-                //cout << "\tfind:" << node->lNumber << ' ' << node->rNumber << endl;
-                //cout << "\ttrue:" << node->trueLeft << ' ' << node->trueRight << endl;
-                //cout << "\tnow:" << l << ' ' << r << endl;
                 if(num > node->mNumber)
                 {
                     if(node->trueLeft>=0) l = node->trueLeft;
-                    if(node->hasRight)  r = node->rNumber;
                     node = node->right;
                 }
                 else
                 {
                     if(node->trueRight>=0) r = node->trueRight;
-                    if(node->hasLeft)  l = node->lNumber;
                     node = node->left;
                 }
             }
-            //cout << "\tfind:" << node->lNumber << ' ' << node->rNumber << endl;
-            //cout << "\ttrue:" << node->trueLeft << ' ' << node->trueRight << endl;
-            //cout << "\tnow:" << l << ' ' << r << endl;
-            //cout << "\tbool:" << node->hasLeft << ' ' << node->hasRight << endl;
-            if(node->hasLeft)  l = node->lNumber;
-            if(node->hasRight)  r = node->rNumber;
-            //if(node->trueLeft>=0) l = node->trueLeft;
-            //if(node->trueRight>=0) r = node->trueRight;
         }
         void insert(int num)
         {
@@ -90,25 +70,13 @@ class SegTree
                     p = p->left;
                 }
             }
-            if(p->lNumber == num)
-            {
-                p->trueLeft = num;
-                p->hasLeft = true;
-                return;
-            }
-            if(p->rNumber == num)
-            {
-                p->trueRight = num;
-                p->hasRight = true;
-                return;
-            }
             int temp=(p->lNumber+p->rNumber)/2;
-            while(temp != num)
+            while(p->lNumber != num||p->rNumber != num)
             {
                 p->mNumber = temp;
                 p->left = new Node(p->lNumber,temp);
-                p->right = new Node(temp,p->rNumber);
-                if(num<temp)
+                p->right = new Node(temp+1,p->rNumber);
+                if(num<=temp)
                 {
                     if(p->trueLeft==-1||num > p->trueLeft)
                     {
@@ -125,13 +93,18 @@ class SegTree
                 }
                 temp=(p->lNumber+p->rNumber)/2;
             }
-            p->mNumber = num;
-            p->trueLeft = num;
-            p->trueRight = num;
-            p->left = new Node(p->lNumber,num);
-            p->left->hasRight = true;
-            p->right = new Node(num,p->rNumber);
-            p->right->hasLeft = true;
+        }
+        ~SegTree()
+        {
+            destroy(root);
+        }
+        private:
+        void destroy(Node* node)
+        {
+            if(node==NULL) return;
+            destroy(node->left);
+            destroy(node->right);
+            delete node;
         }
 };
 int count[500002];
@@ -143,20 +116,21 @@ void testSegTree()
     pos[0] = 1;
     pos[10000] = 1;
     SegTree st(0,10000);
+    st.insert(0);
+    st.insert(10000);
     int tests = 1000,l,r;
     while(tests--)
     {
         int num = rand()%9000+1;
         if(pos[num]) continue;
-        //cout << "find     " << num << endl;
+        cout << "find     " << num << endl;
         st.find(num,l,r);
+        cout << "find     " << num << endl;
         int ll = num,rr=num;
         while(pos[ll]==0)ll--;
         while(pos[rr]==0)rr++;
         st.insert(num);
         pos[num] = 1;
-        //cout << l <<' ' << r << endl;
-        //cout << ll <<' ' << rr << endl;
         assert(l==ll&&r==rr);
     }
 }
@@ -168,6 +142,8 @@ int main()
     for(int caseNumber=1; caseNumber <= T; ++caseNumber)
     {
         SegTree st(0,500001);
+        st.insert(0);
+        st.insert(500001);
         count[0] = 1;one[0] = 0;
         count[500001] = 1;
         one[500001] = 1;
